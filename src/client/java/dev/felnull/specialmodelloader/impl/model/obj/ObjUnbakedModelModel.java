@@ -9,23 +9,19 @@ import dev.felnull.specialmodelloader.impl.SpecialModelLoader;
 import dev.felnull.specialmodelloader.impl.model.SimpleMeshModel;
 import dev.felnull.specialmodelloader.impl.model.SpecialBaseUnbakedModel;
 import net.fabricmc.fabric.api.renderer.v1.Renderer;
-import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
-import net.fabricmc.fabric.api.renderer.v1.mesh.MeshBuilder;
+import net.fabricmc.fabric.api.renderer.v1.mesh.MutableMesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.impl.client.indigo.renderer.IndigoRenderer;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.InventoryMenu;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class ObjUnbakedModelModel extends SpecialBaseUnbakedModel {
     private final ResourceLocation location;
@@ -42,38 +38,39 @@ public class ObjUnbakedModelModel extends SpecialBaseUnbakedModel {
     }
 
     @Override
-    public @NotNull Collection<ResourceLocation> getDependencies() {
-        return List.of();
+    public void resolveDependencies(Resolver resolver) {
     }
 
     @Override
-    public void resolveParents(Function<ResourceLocation, UnbakedModel> function) {
-    }
-
-    @Override
-    public @Nullable BakedModel bake(ModelBaker modelBaker, Function<Material, TextureAtlasSprite> textureGetter, ModelState modelState) {
-        Renderer renderer = RendererAccess.INSTANCE.getRenderer();
+    public @NotNull BakedModel bake(TextureSlots textureSlots, ModelBaker baker, ModelState modelState, boolean hasAmbientOcclusion, boolean useBlockLight, ItemTransforms transforms) {
+        Renderer renderer = Renderer.get();
 
         if (renderer == null) {
             SpecialModelLoader.LOGGER.warn("IndigoRenderer is used since the Renderer cannot be obtained. ({})", location);
             renderer = IndigoRenderer.INSTANCE;
         }
 
-        MeshBuilder builder = renderer.meshBuilder();
-        QuadEmitter emitter = builder.getEmitter();
-
+        MutableMesh builder = renderer.mutableMesh();
+        QuadEmitter emitter = builder.emitter();
+        SpriteGetter spriteGetter = baker.sprites();
         Map<String, Obj> materialGroups = ObjSplitting.splitByMaterialGroups(obj);
 
         materialGroups.forEach((name, model) -> {
             for (int i = 0; i < model.getNumFaces(); i++) {
-                emitFace(emitter, modelState, textureGetter, name, model, model.getFace(i));
+                emitFace(emitter, modelState, spriteGetter, name, model, model.getFace(i));
             }
         });
 
-        return new SimpleMeshModel(getModelOption().isUseAmbientOcclusion(), getGuiLight().lightLikeBlock(), textureGetter.apply(getParticleLocation()), getModelOption().getTransforms(), builder.build());
+        return new SimpleMeshModel(
+                getModelOption().isUseAmbientOcclusion(),
+                getGuiLight().lightLikeBlock(),
+                spriteGetter.get(getParticleLocation()),
+                getModelOption().getTransforms(),
+                builder.immutableCopy()
+        );
     }
 
-    private void emitFace(QuadEmitter emitter, ModelState modelState, Function<Material, TextureAtlasSprite> textureGetter, String materialName, Obj fObj, ObjFace face) {
+    private void emitFace(QuadEmitter emitter, ModelState modelState, SpriteGetter spriteGetter, String materialName, Obj fObj, ObjFace face) {
         for (int i = 0; i < face.getNumVertices(); i++) {
             emitVertex(i, i, emitter, modelState, fObj, face);
         }
@@ -102,9 +99,9 @@ public class ObjUnbakedModelModel extends SpecialBaseUnbakedModel {
         }
 
         if (texLoc != null) {
-            emitter.spriteBake(textureGetter.apply(new Material(InventoryMenu.BLOCK_ATLAS, texLoc)), flg);
+            emitter.spriteBake(spriteGetter.get(new Material(TextureAtlas.LOCATION_BLOCKS, texLoc)), flg);
         } else {
-            emitter.spriteBake(textureGetter.apply(MISSING), flg);
+            emitter.spriteBake(spriteGetter.get(MISSING), flg);
         }
 
         emitter.color(-1, -1, -1, -1);
@@ -127,5 +124,4 @@ public class ObjUnbakedModelModel extends SpecialBaseUnbakedModel {
                 .normal(index, normal.getX(), normal.getY(), normal.getZ())
                 .uv(index, tex.getX(), tex.getY());
     }
-
 }

@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "base": "special-model-loader-test:item/dynamic_obj_model_item",
+    "model": {
+      "type": "special-model-loader-test:dynamic_obj_model_item"
+    }
+  }
+}

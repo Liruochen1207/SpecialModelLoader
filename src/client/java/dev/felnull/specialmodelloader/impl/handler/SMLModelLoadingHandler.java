@@ -24,7 +24,7 @@ public final class SMLModelLoadingHandler {
 
     private static UnbakedModel modifyModelOnLoad(PreparationData data, UnbakedModel original, ModelModifier.OnLoad.Context context) {
 
-        ResourceLocation resId = context.resourceId();
+        ResourceLocation resId = context.id();
         if (resId != null) {
             LoadedResource loadedResource = data.resources().get(resId);
             if (loadedResource != null) {
@@ -61,7 +61,7 @@ public final class SMLModelLoadingHandler {
 
     private static class MyModelLoadingPlugin implements PreparableModelLoadingPlugin<PreparationData> {
         @Override
-        public void onInitializeModelLoader(PreparationData data, ModelLoadingPlugin.Context pluginContext) {
+        public void initialize(PreparationData data, ModelLoadingPlugin.Context pluginContext) {
             pluginContext.modifyModelOnLoad().register((model, context) -> modifyModelOnLoad(data, model, context));
         }
     }

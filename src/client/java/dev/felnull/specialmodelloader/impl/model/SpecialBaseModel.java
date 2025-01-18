@@ -1,7 +1,6 @@
 package dev.felnull.specialmodelloader.impl.model;
 
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
-import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
@@ -22,11 +21,6 @@ public abstract class SpecialBaseModel implements BakedModel, FabricBakedModel {
 
     @Override
     public boolean isVanillaAdapter() {
-        return false;
-    }
-
-    @Override
-    public boolean isCustomRenderer() {
         return false;
     }
 
@@ -53,10 +47,5 @@ public abstract class SpecialBaseModel implements BakedModel, FabricBakedModel {
     @Override
     public @NotNull ItemTransforms getTransforms() {
         return transforms;
-    }
-
-    @Override
-    public @NotNull ItemOverrides getOverrides() {
-        return ItemOverrides.EMPTY;
     }
 }

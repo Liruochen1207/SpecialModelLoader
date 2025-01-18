@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "special-model-loader-test:item/forge_obj_model_item"
+  }
+}
